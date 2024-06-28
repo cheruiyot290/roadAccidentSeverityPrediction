@@ -5,12 +5,16 @@ from sklearn.metrics import mean_squared_error, r2_score
 import joblib
 import matplotlib.pyplot as plt
 import seaborn as sns
+import numpy as np  # Add numpy for data types
 
 # Load the dataset
 df = pd.read_excel("data/Road Accident Data.xlsx")
 
+# Initial number of rows
+print(f"Initial number of rows: {len(df)}")
+
 # Check for missing values
-print(df.isnull().sum())
+print("Initial missing values:\n", df.isnull().sum())
 
 # Impute missing values
 df['Carriageway_Hazards'] = df['Carriageway_Hazards'].fillna('Unknown')
@@ -19,24 +23,54 @@ df['Road_Type'] = df['Road_Type'].fillna(df['Road_Type'].mode()[0])
 df['Weather_Conditions'] = df['Weather_Conditions'].fillna(df['Weather_Conditions'].mode()[0])
 df['Time'] = df['Time'].fillna(df['Time'].mode()[0])
 
+# Check missing values after imputation
+print("Missing values after imputation:\n", df.isnull().sum())
+
+# Number of rows after imputation
+print(f"Number of rows after imputation: {len(df)}")
+
+# Convert 'Time' to hour of day
+df['Hour'] = df['Time'].apply(lambda t: t.hour if pd.notnull(t) else None)
+
+# Verify that 'Hour' conversion is successful
+print(f"Number of rows with valid 'Hour': {df['Hour'].notnull().sum()}")
+
+# Drop rows where 'Hour' could not be converted
+df = df.dropna(subset=['Hour'])
+print(f"Number of rows after dropping invalid times: {len(df)}")
+
 # Encode the target variable
 severity_mapping = {'Slight': 0, 'Serious': 1, 'Fatal': 2}
 df['Accident_Severity'] = df['Accident_Severity'].map(severity_mapping)
 
+# Verify 'Accident_Severity' conversion
+print(f"Unique 'Accident_Severity' values after mapping: {df['Accident_Severity'].unique()}")
+
 # Drop rows where the target variable is NaN
 df = df.dropna(subset=['Accident_Severity'])
+print(f"Number of rows after dropping NaN Accident_Severity: {len(df)}")
 
 # Define dependent and independent variables
 X = df[['Day_of_Week', 'Junction_Control', 'Junction_Detail', 'Light_Conditions',
         'Local_Authority_(District)', 'Carriageway_Hazards', 'Longitude', 'Latitude',
         'Number_of_Casualties', 'Number_of_Vehicles', 'Police_Force',
-        'Road_Surface_Conditions', 'Road_Type', 'Speed_limit', 'Time',
+        'Road_Surface_Conditions', 'Road_Type', 'Speed_limit', 'Hour',
         'Urban_or_Rural_Area', 'Weather_Conditions', 'Vehicle_Type']]
 
 y = df['Accident_Severity']
 
 # Convert categorical variables to dummy/indicator variables
 X = pd.get_dummies(X, drop_first=True)
+
+# Check the number of samples after preprocessing
+print(f"Number of samples after preprocessing: {len(X)}")
+
+# Check for any rows where the independent variables have NaN values and drop them
+X = X.dropna()
+y = y[X.index]
+
+# Check the number of samples after dropping NaN rows
+print(f"Number of samples after dropping NaN rows: {len(X)}")
 
 # Split the dataset into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -75,7 +109,7 @@ hypothetical_data = pd.DataFrame([{
     'Road_Surface_Conditions': 'Dry',
     'Road_Type': 'Single carriageway',
     'Speed_limit': 30,
-    'Time': '12:00',
+    'Hour': 12,
     'Urban_or_Rural_Area': 1,
     'Weather_Conditions': 'Fine no high winds',
     'Vehicle_Type': 1
@@ -121,11 +155,16 @@ plt.xticks(ticks=[0, 1, 2], labels=['Slight', 'Serious', 'Fatal'])
 plt.show()
 
 # Heatmap of Correlation Matrix
-correlation_matrix = df.corr()
-plt.figure(figsize=(15, 10))
-sns.heatmap(correlation_matrix, annot=True, cmap='viridis')
-plt.title('Correlation Matrix of Features')
-plt.show()
+# Select numeric columns for correlation calculation
+numeric_columns = df.select_dtypes(include=[np.number]).columns
+correlation_matrix = df[numeric_columns].corr()
+
+# Handle warnings related to use_inf_as_na
+with pd.option_context('mode.use_inf_as_na', True):
+    plt.figure(figsize=(15, 10))
+    sns.heatmap(correlation_matrix, annot=True, cmap='viridis')
+    plt.title('Correlation Matrix of Features')
+    plt.show()
 
 # Pairplot of Select Features
 subset_df = df[['Accident_Severity', 'Number_of_Casualties', 'Number_of_Vehicles', 'Speed_limit']]
