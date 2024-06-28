@@ -134,6 +134,7 @@ plt.title('Distribution of Accident Severity')
 plt.xlabel('Accident Severity')
 plt.ylabel('Count')
 plt.xticks(ticks=[0, 1, 2], labels=['Slight', 'Serious', 'Fatal'])
+plt.savefig('data/images/distribution_accident_severity.png')  # Save plot as PNG
 plt.show()
 
 # Number of Accidents by Day of the Week
@@ -143,6 +144,7 @@ plt.title('Number of Accidents by Day of the Week')
 plt.xlabel('Day of the Week')
 plt.ylabel('Count')
 plt.xticks(ticks=range(1, 8), labels=['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])
+plt.savefig('data/images/accidents_by_day_of_week.png')  # Save plot as PNG
 plt.show()
 
 # Accident Severity vs. Speed Limit
@@ -152,6 +154,7 @@ plt.title('Accident Severity vs. Speed Limit')
 plt.xlabel('Accident Severity')
 plt.ylabel('Speed Limit')
 plt.xticks(ticks=[0, 1, 2], labels=['Slight', 'Serious', 'Fatal'])
+plt.savefig('data/images/severity_vs_speed_limit.png')  # Save plot as PNG
 plt.show()
 
 # Heatmap of Correlation Matrix
@@ -164,10 +167,12 @@ with pd.option_context('mode.use_inf_as_na', True):
     plt.figure(figsize=(15, 10))
     sns.heatmap(correlation_matrix, annot=True, cmap='viridis')
     plt.title('Correlation Matrix of Features')
+    plt.savefig('data/images/correlation_matrix.png')  # Save plot as PNG
     plt.show()
 
 # Pairplot of Select Features
 subset_df = df[['Accident_Severity', 'Number_of_Casualties', 'Number_of_Vehicles', 'Speed_limit']]
 sns.pairplot(subset_df, hue='Accident_Severity', palette='viridis')
 plt.suptitle('Pairplot of Select Features', y=1.02)
+plt.savefig('data/images/pairplot_features.png')  # Save plot as PNG
 plt.show()
